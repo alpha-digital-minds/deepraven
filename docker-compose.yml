@@ -1,0 +1,23 @@
+services:
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5100:5100"
+    environment:
+      # ── Required ──────────────────────────────────────────────────────────
+      REDIS_URL: ${REDIS_URL}          # inject your Redis URL (Upstash, managed, etc.)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      # ── Optional (uncomment to override defaults) ─────────────────────────
+      # GROQ_MODEL: llama-3.3-70b-versatile
+      # MAX_CONVERSATIONS_CONTEXT: 20
+      # EXTRACTION_DELAY_SECONDS: 60
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5100/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

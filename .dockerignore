@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Secrets — never bake into the image
+.env
+*.env
+
+# Dev / repo files
+.git/
+.gitignore
+scripts/
+supabase/
+README.md
+CLAUDE.md
+
+# Editor
+.vscode/
+.idea/

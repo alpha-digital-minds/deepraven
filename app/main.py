@@ -1,0 +1,80 @@
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+
+from app.config import get_settings
+from app.redis_client import close_redis, get_redis
+from app.supabase_client import close_supabase, get_supabase
+from app.worker import compression_worker, extraction_worker
+from app.routers import account_keys, auth, contacts, conversations, profiles, projects, stats
+
+logging.basicConfig(level=logging.INFO)
+
+_DASHBOARD_HTML = (Path(__file__).parent / "static" / "dashboard.html").read_text()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await get_redis()
+    await get_supabase()
+    worker = asyncio.create_task(
+        extraction_worker(delay_seconds=get_settings().extraction_delay_seconds)
+    )
+    compressor = asyncio.create_task(compression_worker(run_hour_utc=23))
+    yield
+    worker.cancel()
+    compressor.cancel()
+    await close_redis()
+    await close_supabase()
+
+
+app = FastAPI(
+    title="DeepRaven",
+    description="Long-lasting memory layer for sales agents — multi-tenant SaaS.",
+    version="2.0.0",
+    lifespan=lifespan,
+)
+
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(account_keys.router, prefix="/api/v1")
+app.include_router(projects.router, prefix="/api/v1")
+app.include_router(contacts.router, prefix="/api/v1")
+app.include_router(conversations.router, prefix="/api/v1")
+app.include_router(profiles.router, prefix="/api/v1")
+app.include_router(stats.router, prefix="/api/v1")
+
+
+@app.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    return RedirectResponse("/dashboard", status_code=302)
+
+
+@app.get("/auth/confirm", include_in_schema=False)
+async def auth_confirm_shortcut(request: Request) -> RedirectResponse:
+    """Short URL that Supabase redirects to — forwards to the API handler."""
+    qs = request.url.query
+    return RedirectResponse(f"/api/v1/auth/confirm{'?' + qs if qs else ''}", status_code=302)
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+async def dashboard() -> HTMLResponse:
+    return HTMLResponse(content=_DASHBOARD_HTML)
+
+
+@app.get("/assets/logo.png", include_in_schema=False)
+async def logo():
+    return FileResponse(Path(__file__).parent / "assets" / "logo.png")
+
+
+@app.get("/assets/raven.png", include_in_schema=False)
+async def raven():
+    return FileResponse(Path(__file__).parent / "assets" / "raven.png")
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
