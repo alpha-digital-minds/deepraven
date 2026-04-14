@@ -1,6 +1,49 @@
+# Python
 venv/
+.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Environment
 .env
-profiles/*
-debug/*
+.env.*
+!.env.example
+
+# Runtime data
+profiles/
+debug/
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+*.tar
+
+# Infrastructure (company-internal, not part of the open source repo)
+infrastructure/
+
+# Claude Code / OMC tooling
+.claude/
+.omc/
