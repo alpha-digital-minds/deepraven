@@ -47,3 +47,4 @@ infrastructure/
 # Claude Code / OMC tooling
 .claude/
 .omc/
+.worktrees/
