@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="app/assets/logo.png" alt="DeepRaven" width="320"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="app/assets/logo-dark.png"/>
+    <img src="app/assets/logo.png" alt="DeepRaven" width="320"/>
+  </picture>
 </p>
 
 <p align="center">
