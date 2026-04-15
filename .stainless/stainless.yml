@@ -14,7 +14,7 @@ targets:
     publish:
       pypi: false
 
-  node:
+  typescript:
     edition: node.2025-11-20
     package_name: deepraven
     production_repo: alpha-digital-minds/deepraven-node
