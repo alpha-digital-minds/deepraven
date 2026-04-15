@@ -53,8 +53,7 @@ jobs:
             --openapi-spec fern/openapi/openapi.json \
             --stainless-config .stainless/stainless.yml \
             --branch main \
-            --wait all \
-            --enable-ai-commit-message
+            --wait all
         env:
           STAINLESS_API_KEY: ${{ secrets.STAINLESS_API_KEY }}
 
