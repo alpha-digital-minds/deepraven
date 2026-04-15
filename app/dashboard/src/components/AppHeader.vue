@@ -8,22 +8,20 @@
 
     <!-- Project picker -->
     <div class="proj-picker" id="proj-picker">
+      <button class="proj-picker-btn" @click.stop="dropdownOpen = !dropdownOpen">
+        <span id="proj-picker-label">{{ selectedProject?.name ?? 'Select a project' }}</span>
+        <span class="proj-dd-arrow">▾</span>
+      </button>
       <div class="proj-dropdown" id="proj-dropdown" :class="{ open: dropdownOpen }">
-        <button class="proj-picker-btn" @click.stop="dropdownOpen = !dropdownOpen">
-          <span id="proj-picker-label">{{ selectedProject?.name ?? 'Select a project' }}</span>
-          <span class="proj-dd-arrow">▾</span>
-        </button>
-        <div class="proj-dd-menu">
-          <div
-            v-for="p in appStore.projects"
-            :key="p.id"
-            class="proj-dd-item"
-            :class="{ active: p.id === route.params.projectId }"
-            @click="selectProject(p.id)"
-          >{{ p.name }}</div>
-          <div class="proj-dd-divider" />
-          <div class="proj-dd-item proj-dd-new" @click="showCreateModal = true">+ New Project</div>
-        </div>
+        <div
+          v-for="p in appStore.projects"
+          :key="p.id"
+          class="proj-dd-item"
+          :class="{ active: p.id === route.params.projectId }"
+          @click="selectProject(p.id)"
+        >{{ p.name }}</div>
+        <div class="proj-dd-divider" />
+        <div class="proj-dd-item proj-dd-new" @click="showCreateModal = true">+ New Project</div>
       </div>
     </div>
 
