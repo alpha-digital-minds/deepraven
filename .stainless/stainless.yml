@@ -10,14 +10,14 @@ targets:
   python:
     edition: python.2025-11-20
     package_name: deepraven
-    production_repo: null
+    production_repo: alpha-digital-minds/deepraven-python
     publish:
       pypi: false
 
   node:
     edition: node.2025-11-20
     package_name: deepraven
-    production_repo: null
+    production_repo: alpha-digital-minds/deepraven-node
     publish:
       npm: false
 
