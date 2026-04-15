@@ -1,7 +1,7 @@
 <template>
   <header>
     <RouterLink to="/">
-      <img class="logo" src="/assets/logo.png" alt="DeepRaven" />
+      <img class="logo" :src="'/assets/logo.png'" alt="DeepRaven" />
     </RouterLink>
     <h1>DeepRaven</h1>
     <div class="spacer" />

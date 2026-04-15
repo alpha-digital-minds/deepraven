@@ -59,13 +59,6 @@ async def auth_confirm_shortcut(request: Request) -> RedirectResponse:
     return RedirectResponse(f"/api/v1/auth/confirm{'?' + qs if qs else ''}", status_code=302)
 
 
-@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
-@app.get("/dashboard/{path:path}", response_class=HTMLResponse, include_in_schema=False)
-async def dashboard(path: str = "") -> HTMLResponse:
-    dist_index = Path(__file__).parent / "static" / "dist" / "index.html"
-    return HTMLResponse(content=dist_index.read_text())
-
-
 @app.get("/assets/logo.png", include_in_schema=False)
 async def logo():
     return FileResponse(Path(__file__).parent / "assets" / "logo.png")
@@ -81,7 +74,15 @@ async def health():
     return {"status": "ok"}
 
 
-# Serve Vite-built assets (JS, CSS, images)
+# Serve Vite-built assets (JS, CSS) — must be mounted BEFORE the SPA catch-all
+# so /dashboard/assets/* is handled here rather than falling into the route below.
 _dist = Path(__file__).parent / "static" / "dist"
 if _dist.exists():
     app.mount("/dashboard/assets", StaticFiles(directory=str(_dist / "assets")), name="dashboard-assets")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/dashboard/{path:path}", response_class=HTMLResponse, include_in_schema=False)
+async def dashboard(path: str = "") -> HTMLResponse:
+    dist_index = Path(__file__).parent / "static" / "dist" / "index.html"
+    return HTMLResponse(content=dist_index.read_text())

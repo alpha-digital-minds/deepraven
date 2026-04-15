@@ -2,7 +2,7 @@
   <div id="login-screen">
     <div class="login-card">
       <div class="login-logo">
-        <img src="/assets/logo.png" alt="DeepRaven" />
+        <img :src="'/assets/logo.png'" alt="DeepRaven" />
       </div>
       <h2 id="auth-title">{{ title }}</h2>
       <p class="sub" id="auth-sub">{{ subtitle }}</p>
