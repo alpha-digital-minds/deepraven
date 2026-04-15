@@ -6,8 +6,15 @@ export default defineConfig({
   plugins: [vue()],
   base: '/dashboard/',
   build: {
-    outDir: resolve(__dirname, '../../static/dist'),
+    outDir: resolve(__dirname, '../static/dist'),
     emptyOutDir: true,
+    rollupOptions: {
+      // /assets/* are served directly by FastAPI — not bundled by Vite
+      onwarn(warning, defaultHandler) {
+        if (warning.code === 'UNRESOLVED_IMPORT') return
+        defaultHandler(warning)
+      },
+    },
   },
   server: {
     proxy: {
