@@ -25,41 +25,6 @@
 
 ---
 
-## SDKs
-
-Official clients — generated and maintained by [Stainless](https://stainless.com):
-
-**Python**
-```bash
-pip install deepraven
-```
-
-**TypeScript / JavaScript**
-```bash
-npm install deepraven
-```
-
-```python
-from deepraven import DeepRaven
-
-client = DeepRaven(api_key="dr_...")
-
-# Push a conversation
-client.projects.contacts.conversations.create(
-    project_id="proj_123",
-    contact_id="contact_456",
-    messages=[{"role": "user", "content": "I need a gift under $200"}],
-)
-
-# Get the profile
-profile = client.projects.contacts.profiles.retrieve(
-    project_id="proj_123",
-    contact_id="contact_456",
-)
-```
-
----
-
 ## What is DeepRaven?
 
 DeepRaven is a **memory-as-a-service layer** for AI sales agents. Every time your agent has a conversation, DeepRaven ingests the messages, runs a multi-pass LLM extraction pipeline, and builds a structured customer profile that gets smarter over time.
@@ -173,6 +138,41 @@ Every contact gets a fully structured `UserProfile` that captures what matters f
 | Scheduling / Locking | Redis (Upstash or self-hosted) |
 | LLM | Groq API — `llama-3.3-70b-versatile` (OpenAI-compatible) |
 | Dashboard | Embedded single-file Vue.js HTML |
+
+---
+
+## SDKs
+
+Official clients — generated and maintained by [Stainless](https://stainless.com):
+
+**Python**
+```bash
+pip install deepraven
+```
+
+**TypeScript / JavaScript**
+```bash
+npm install deepraven
+```
+
+```python
+from deepraven import DeepRaven
+
+client = DeepRaven(api_key="dr_...")
+
+# Push a conversation
+client.projects.contacts.conversations.create(
+    project_id="proj_123",
+    contact_id="contact_456",
+    messages=[{"role": "user", "content": "I need a gift under $200"}],
+)
+
+# Get the profile
+profile = client.projects.contacts.profiles.retrieve(
+    project_id="proj_123",
+    contact_id="contact_456",
+)
+```
 
 ---
 
