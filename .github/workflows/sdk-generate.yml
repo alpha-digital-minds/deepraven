@@ -36,7 +36,16 @@ jobs:
       - name: Install Stainless CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/stainless-api/stainless-api-cli/main/install.sh | sh
-          echo "$HOME/.stainless/bin" >> $GITHUB_PATH
+          # Locate stl wherever the install script put it
+          STL_PATH=$(find $HOME /usr/local/bin -name "stl" -type f 2>/dev/null | head -1)
+          if [ -n "$STL_PATH" ]; then
+            echo "$(dirname $STL_PATH)" >> $GITHUB_PATH
+          else
+            echo "stl not found after install, checking common locations:"
+            ls -la $HOME/.local/bin/ 2>/dev/null || true
+            ls -la /usr/local/bin/stl 2>/dev/null || true
+            exit 1
+          fi
 
       - name: Trigger Stainless build
         run: |
