@@ -35,10 +35,10 @@ jobs:
 
       - name: Install Stainless CLI
         run: |
-          TAG=$(curl -fsSL https://api.github.com/repos/stainless-api/stainless-api-cli/releases/latest | jq -r '.tag_name')
-          VERSION=${TAG#v}
-          curl -fsSL "https://github.com/stainless-api/stainless-api-cli/releases/download/${TAG}/stl_${VERSION}_linux_amd64.deb" -o stl.deb
-          sudo dpkg -i stl.deb
+          curl -fsSL https://raw.githubusercontent.com/stainless-api/stainless-api-cli/main/install.sh | sh
+          # Make stl available in this step and all subsequent steps
+          export PATH="$HOME/.stainless/bin:$PATH"
+          echo "$HOME/.stainless/bin" >> $GITHUB_PATH
           stl --version
 
       - name: Trigger Stainless build
