@@ -48,3 +48,4 @@ infrastructure/
 .claude/
 .omc/
 .worktrees/
+sdks/
