@@ -1,0 +1,57 @@
+name: Regenerate SDKs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/routers/**"
+      - "app/models.py"
+      - "app/main.py"
+      - ".stainless/stainless.yml"
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Export OpenAPI spec
+        run: python scripts/export_openapi.py
+        env:
+          REDIS_URL: redis://localhost:6379
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SECRET_KEY: placeholder
+          GROQ_API_KEY: placeholder
+
+      - name: Install Stainless CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/stainless-api/stainless-api-cli/main/install.sh | sh
+          echo "$HOME/.stainless/bin" >> $GITHUB_PATH
+
+      - name: Trigger Stainless build
+        run: |
+          stl builds create \
+            --project deepraven \
+            --openapi-spec fern/openapi/openapi.json \
+            --stainless-config .stainless/stainless.yml \
+            --branch main \
+            --wait all \
+            --enable-ai-commit-message
+        env:
+          STAINLESS_API_KEY: ${{ secrets.STAINLESS_API_KEY }}
+
+      - name: Commit updated spec
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update OpenAPI spec"
+          file_pattern: "fern/openapi/openapi.json"
