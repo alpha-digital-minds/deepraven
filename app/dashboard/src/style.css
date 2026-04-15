@@ -22,6 +22,13 @@ body {
   overflow: hidden;
   font-size: 14px;
 }
+/* Vue mounts into #app — make it fill body and pass the flex chain down */
+#app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 /* ── Header ── */
 header {
