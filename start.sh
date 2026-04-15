@@ -8,16 +8,21 @@ if [ ! -f ".env" ]; then
   exit 1
 fi
 
-# When running from a git worktree the venv lives in the main checkout.
-# Fall back to the main worktree path if no local venv is found.
+# Locate or create the virtual environment.
+# git rev-parse --git-common-dir returns ".git" in the main checkout (relative)
+# and the absolute path to the shared .git dir when inside a worktree — so
+# $GIT_COMMON/../venv always resolves to the main checkout's venv.
 VENV_PATH="venv"
+
 if [ ! -d "$VENV_PATH" ]; then
-  MAIN_ROOT=$(git worktree list 2>/dev/null | head -1 | awk '{print $1}')
-  if [ -d "$MAIN_ROOT/venv" ]; then
-    VENV_PATH="$MAIN_ROOT/venv"
+  GIT_COMMON=$(git rev-parse --git-common-dir 2>/dev/null || echo "")
+  MAIN_VENV="$GIT_COMMON/../venv"
+  if [ -n "$GIT_COMMON" ] && [ -d "$MAIN_VENV" ]; then
+    VENV_PATH="$MAIN_VENV"
   else
-    echo "Error: no virtual environment found. Run: python3 -m venv venv && pip install -r requirements.txt"
-    exit 1
+    echo "No virtual environment found — creating one and installing dependencies..."
+    python3 -m venv venv
+    venv/bin/pip install -r requirements.txt
   fi
 fi
 
