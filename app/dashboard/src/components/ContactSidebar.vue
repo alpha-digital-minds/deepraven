@@ -11,19 +11,6 @@
       />
     </div>
 
-    <!-- Project nav (keys / integration / settings) -->
-    <div v-if="projectId" class="sidebar-proj-nav" id="sidebar-proj-nav">
-      <RouterLink :to="`/projects/${projectId}`" class="spn-item" id="spn-keys">
-        🔑 API Keys
-      </RouterLink>
-      <RouterLink :to="`/projects/${projectId}?tab=integration`" class="spn-item" id="spn-integration">
-        🔗 Integration
-      </RouterLink>
-      <RouterLink :to="`/projects/${projectId}?tab=settings`" class="spn-item" id="spn-settings">
-        ⚙ Settings
-      </RouterLink>
-    </div>
-
     <div id="contacts-list" class="contacts-list">
       <div v-if="!projectId" style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">
         Select a project
@@ -49,6 +36,19 @@
           <span v-if="c.unprocessed_count > 0" class="badge b-amber">⚡ {{ c.unprocessed_count }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Project nav sticky at bottom -->
+    <div v-if="projectId" class="sidebar-proj-nav" id="sidebar-proj-nav">
+      <RouterLink :to="`/projects/${projectId}`" class="spn-item" id="spn-keys">
+        🔑 API Keys
+      </RouterLink>
+      <RouterLink :to="`/projects/${projectId}?tab=integration`" class="spn-item" id="spn-integration">
+        🔗 Integration
+      </RouterLink>
+      <RouterLink :to="`/projects/${projectId}?tab=settings`" class="spn-item" id="spn-settings">
+        ⚙ Settings
+      </RouterLink>
     </div>
   </div>
 </template>
