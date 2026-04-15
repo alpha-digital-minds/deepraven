@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=https://app.stainless.com/config.schema.json
+edition: 2026-02-23
+
+organization:
+  name: DeepRaven
+  docs: 'https://deepraven.ai'
+  contact: 'hello@adminds.at'
+
+targets:
+  python:
+    edition: python.2025-11-20
+    package_name: deepraven
+    production_repo: null
+    publish:
+      pypi: false
+
+  node:
+    edition: node.2025-11-20
+    package_name: deepraven
+    production_repo: null
+    publish:
+      npm: false
+
+environments:
+  production: https://deepraven.ai
+
+resources:
+  auth:
+    methods:
+      register: post /api/v1/auth/register
+      login: post /api/v1/auth/login
+      refresh: post /api/v1/auth/refresh
+      reset_password: post /api/v1/auth/reset-password
+      update_password: post /api/v1/auth/update-password
+      verify_otp: post /api/v1/auth/verify-otp
+      resend_otp: post /api/v1/auth/resend-otp
+
+  keys:
+    methods:
+      list: get /api/v1/keys
+      create: post /api/v1/keys
+      delete: delete /api/v1/keys/{key_id}
+
+  projects:
+    methods:
+      list: get /api/v1/projects
+      create: post /api/v1/projects
+      retrieve: get /api/v1/projects/{project_id}
+      update: patch /api/v1/projects/{project_id}
+      delete: delete /api/v1/projects/{project_id}
+    subresources:
+      keys:
+        methods:
+          list: get /api/v1/projects/{project_id}/keys
+          create: post /api/v1/projects/{project_id}/keys
+          delete: delete /api/v1/projects/{project_id}/keys/{key_id}
+      contacts:
+        methods:
+          list: get /api/v1/projects/{project_id}/contacts
+          retrieve: get /api/v1/projects/{project_id}/contacts/{contact_id}
+        subresources:
+          conversations:
+            methods:
+              create: post /api/v1/projects/{project_id}/contacts/{contact_id}/conversations
+              list: get /api/v1/projects/{project_id}/contacts/{contact_id}/conversations
+          profiles:
+            methods:
+              retrieve: get /api/v1/projects/{project_id}/contacts/{contact_id}/profile
+              status: get /api/v1/projects/{project_id}/contacts/{contact_id}/profile/status
+              extract: post /api/v1/projects/{project_id}/contacts/{contact_id}/profile/extract
+              extract_sync: post /api/v1/projects/{project_id}/contacts/{contact_id}/profile/extract/sync
+              delete_contact: delete /api/v1/projects/{project_id}/contacts/{contact_id}/contact
+
+  stats:
+    methods:
+      retrieve: get /api/v1/stats
+
+settings:
+  disable_mock_tests: true
+  license: Apache-2.0
+
+client_settings:
+  opts:
+    api_key:
+      type: string
+      auth:
+        security_scheme: BearerAuth
+      read_env: DEEPRAVEN_API_KEY
+
+query_settings:
+  nested_format: brackets
+  array_format: comma
+
+readme:
+  example_requests:
+    default:
+      type: request
+      endpoint: get /api/v1/projects/{project_id}/contacts/{contact_id}/profile
+      params:
+        project_id: proj_123
+        contact_id: contact_456
+    headline:
+      type: request
+      endpoint: post /api/v1/projects/{project_id}/contacts/{contact_id}/conversations
+      params:
+        project_id: proj_123
+        contact_id: contact_456
+        messages:
+          - role: user
+            content: I need a gift under $200
