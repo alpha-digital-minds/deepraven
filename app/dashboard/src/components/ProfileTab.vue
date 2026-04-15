@@ -89,19 +89,33 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue'
 import { useRouter } from 'vue-router'
 import { deleteConversations, deleteProfile, deleteContact, fmt } from '../api'
 import { useToast } from '../composables/useToast'
 import type { UserProfile } from '../types'
 
-// Inline sub-components
+// Inline sub-components using render functions (no template compiler needed)
 const ProfileRow = {
   props: ['label', 'value'],
-  template: `<div class="field"><span class="fl">{{ label }}</span><span class="fv" :class="{ empty: !value }">{{ value || '—' }}</span></div>`,
+  setup(props: { label: string; value: string | null | undefined }) {
+    return () => h('div', { class: 'field' }, [
+      h('span', { class: 'fl' }, props.label),
+      h('span', { class: ['fv', !props.value ? 'empty' : ''] }, props.value || '—'),
+    ])
+  },
 }
 const TagList = {
   props: ['items'],
-  template: `<div v-if="items && items.length" class="tag-list"><span v-for="t in items" :key="t" class="tag">{{ t }}</span></div><span v-else class="fv empty">none yet</span>`,
+  setup(props: { items: string[] | null | undefined }) {
+    return () => {
+      const items = props.items
+      if (items && items.length) {
+        return h('div', { class: 'tag-list' }, items.map(t => h('span', { class: 'tag', key: t }, t)))
+      }
+      return h('span', { class: 'fv empty' }, 'none yet')
+    }
+  },
 }
 
 const props = defineProps<{ profile: UserProfile; projectId: string; contactId: string }>()
