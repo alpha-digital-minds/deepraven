@@ -40,9 +40,14 @@ api.interceptors.response.use(
           original.headers.Authorization = `Bearer ${auth.token}`
           return api(original)
         }
+        // Refresh failed — logout already called, redirect in progress.
+        // Return a never-resolving promise so callers don't flash misleading
+        // error toasts while the user is being redirected to /login.
+        return new Promise(() => {})
       } else {
         auth.logout()
         router.push('/login')
+        return new Promise(() => {})
       }
     }
     return Promise.reject(error)

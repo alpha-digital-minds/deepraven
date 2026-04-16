@@ -4,10 +4,12 @@
     <div class="home-sub">Welcome back, {{ authStore.email }}</div>
 
     <div class="stat-cards">
-      <div v-if="loading" v-for="i in 4" :key="i" class="stat-card">
-        <div class="sc-label" style="background:#f1f5f9;width:60%;height:10px;border-radius:4px" />
-        <div class="sc-value" style="background:#f1f5f9;width:40%;height:28px;border-radius:4px;margin-top:8px" />
-      </div>
+      <template v-if="loading">
+        <div v-for="i in 4" :key="i" class="stat-card">
+          <div class="sc-label" style="background:#f1f5f9;width:60%;height:10px;border-radius:4px" />
+          <div class="sc-value" style="background:#f1f5f9;width:40%;height:28px;border-radius:4px;margin-top:8px" />
+        </div>
+      </template>
       <template v-else>
         <div class="stat-card sc-blue">
           <div class="sc-label">Projects</div>
