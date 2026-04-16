@@ -18,6 +18,9 @@ supabase/
 README.md
 CLAUDE.md
 
+# Dashboard source — only the built dist (app/static/dist/) is needed at runtime
+app/dashboard/
+
 # Editor
 .vscode/
 .idea/

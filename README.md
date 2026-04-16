@@ -359,6 +359,25 @@ Open `http://localhost:5100/dashboard` for the built-in management UI.
 
 ---
 
+## Building the Dashboard
+
+The compiled dashboard (`app/static/dist/`) is committed to the repository, so **no build step is required** to run DeepRaven. The backend serves the pre-built assets automatically.
+
+If you want to modify the dashboard frontend:
+
+```bash
+cd app/dashboard
+npm install
+npm run dev       # dev server with HMR at http://localhost:5173
+npm run build     # compile to app/static/dist/ (commit the output)
+```
+
+**Requirements:** Node.js 18+
+
+The Vite dev server proxies API requests to the FastAPI backend — start `./start.sh` first, then `npm run dev` to work on the frontend with hot reload.
+
+---
+
 ## Project Structure
 
 ```
