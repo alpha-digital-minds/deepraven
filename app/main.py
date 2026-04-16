@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.redis_client import close_redis, get_redis
@@ -13,8 +14,6 @@ from app.worker import compression_worker, extraction_worker
 from app.routers import account_keys, auth, contacts, conversations, profiles, projects, stats
 
 logging.basicConfig(level=logging.INFO)
-
-_DASHBOARD_HTML = (Path(__file__).parent / "static" / "dashboard.html").read_text()
 
 
 @asynccontextmanager
@@ -60,11 +59,6 @@ async def auth_confirm_shortcut(request: Request) -> RedirectResponse:
     return RedirectResponse(f"/api/v1/auth/confirm{'?' + qs if qs else ''}", status_code=302)
 
 
-@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
-async def dashboard() -> HTMLResponse:
-    return HTMLResponse(content=_DASHBOARD_HTML)
-
-
 @app.get("/assets/logo.png", include_in_schema=False)
 async def logo():
     return FileResponse(Path(__file__).parent / "assets" / "logo.png")
@@ -78,3 +72,17 @@ async def raven():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+# Serve Vite-built assets (JS, CSS) — must be mounted BEFORE the SPA catch-all
+# so /dashboard/assets/* is handled here rather than falling into the route below.
+_dist = Path(__file__).parent / "static" / "dist"
+if _dist.exists():
+    app.mount("/dashboard/assets", StaticFiles(directory=str(_dist / "assets")), name="dashboard-assets")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/dashboard/{path:path}", response_class=HTMLResponse, include_in_schema=False)
+async def dashboard(path: str = "") -> HTMLResponse:
+    dist_index = Path(__file__).parent / "static" / "dist" / "index.html"
+    return HTMLResponse(content=dist_index.read_text())

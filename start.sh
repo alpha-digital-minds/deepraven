@@ -8,6 +8,12 @@ if [ ! -f ".env" ]; then
   exit 1
 fi
 
+if [ ! -d "venv" ]; then
+  echo "No virtual environment found — creating one and installing dependencies..."
+  python3 -m venv venv
+  venv/bin/pip install -r requirements.txt
+fi
+
 source venv/bin/activate
 
 echo "Starting DeepRaven backend..."

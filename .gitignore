@@ -7,8 +7,11 @@ __pycache__/
 *.pyd
 *.egg
 *.egg-info/
-dist/
+/dist/
 build/
+
+# Frontend
+app/dashboard/node_modules/
 .eggs/
 .pytest_cache/
 .mypy_cache/
