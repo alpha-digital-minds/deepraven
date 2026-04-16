@@ -80,13 +80,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import {
-  Chart, CategoryScale, LinearScale, BarElement, Tooltip,
+  Chart, BarController, CategoryScale, LinearScale, BarElement, Tooltip,
 } from 'chart.js'
 import { useAuthStore } from '../stores/auth'
 import { getStatsOverview, getDailyConversations, getUsageStats, fmtTokens } from '../api'
 import type { StatsOverview, ProjectUsage } from '../types'
 
-Chart.register(CategoryScale, LinearScale, BarElement, Tooltip)
+Chart.register(BarController, CategoryScale, LinearScale, BarElement, Tooltip)
 
 const authStore = useAuthStore()
 const chartCanvas = ref<HTMLCanvasElement | null>(null)
