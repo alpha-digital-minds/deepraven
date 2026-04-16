@@ -52,8 +52,9 @@ test.describe('Dashboard smoke tests', () => {
     await page.goto('/dashboard/login')
     await page.waitForLoadState('networkidle')
 
-    // Filter out API calls (expected to fail without backend) — only asset failures matter
-    const assetFailures = failedRequests.filter(u => u.includes('/assets/'))
+    // Only check Vite-built assets (/dashboard/assets/*); /assets/logo.png is
+    // served by FastAPI and won't be available against vite preview
+    const assetFailures = failedRequests.filter(u => u.includes('/dashboard/assets/'))
     expect(assetFailures).toHaveLength(0)
   })
 })

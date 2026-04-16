@@ -22,4 +22,11 @@ export default defineConfig({
       '/assets': 'http://localhost:5100',
     },
   },
+  // preview (used by `vite preview` and Playwright tests) — /assets is served
+  // by FastAPI at runtime, no proxy needed here
+  preview: {
+    proxy: {
+      '/api': 'http://localhost:5100',
+    },
+  },
 })

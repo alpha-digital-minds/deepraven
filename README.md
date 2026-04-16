@@ -376,6 +376,18 @@ npm run build     # compile to app/static/dist/ (commit the output)
 
 The Vite dev server proxies API requests to the FastAPI backend — start `./start.sh` first, then `npm run dev` to work on the frontend with hot reload.
 
+### Running the dashboard tests
+
+```bash
+cd app/dashboard
+npm run build     # tests run against the compiled output
+npm test          # run Playwright smoke tests (headless)
+npm test -- --headed   # run with a visible browser
+npm test -- --ui       # open the interactive Playwright UI
+```
+
+Tests cover: auth redirect, login form rendering, mode switching, validation, JS errors, and asset loading. No backend required — tests run against `vite preview`.
+
 ---
 
 ## Project Structure
