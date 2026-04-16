@@ -137,7 +137,7 @@ Every contact gets a fully structured `UserProfile` that captures what matters f
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Scheduling / Locking | Redis (Upstash or self-hosted) |
 | LLM | Groq API — `llama-3.3-70b-versatile` (OpenAI-compatible) |
-| Dashboard | Embedded single-file Vue.js HTML |
+| Dashboard | Vite 5 + Vue 3 + TypeScript SFCs (Pinia, Vue Router, Chart.js, Axios) |
 
 ---
 
@@ -359,6 +359,37 @@ Open `http://localhost:5100/dashboard` for the built-in management UI.
 
 ---
 
+## Building the Dashboard
+
+The compiled dashboard (`app/static/dist/`) is committed to the repository, so **no build step is required** to run DeepRaven. The backend serves the pre-built assets automatically.
+
+If you want to modify the dashboard frontend:
+
+```bash
+cd app/dashboard
+npm install
+npm run dev       # dev server with HMR at http://localhost:5173
+npm run build     # compile to app/static/dist/ (commit the output)
+```
+
+**Requirements:** Node.js 18+
+
+The Vite dev server proxies API requests to the FastAPI backend — start `./start.sh` first, then `npm run dev` to work on the frontend with hot reload.
+
+### Running the dashboard tests
+
+```bash
+cd app/dashboard
+npm run build     # tests run against the compiled output
+npm test          # run Playwright smoke tests (headless)
+npm test -- --headed   # run with a visible browser
+npm test -- --ui       # open the interactive Playwright UI
+```
+
+Tests cover: auth redirect, login form rendering, mode switching, validation, JS errors, and asset loading. No backend required — tests run against `vite preview`.
+
+---
+
 ## Project Structure
 
 ```
@@ -380,8 +411,32 @@ deepraven/
 │   │   ├── conversations.py # Conversation ingest
 │   │   ├── profiles.py      # Profile CRUD + extraction
 │   │   └── stats.py         # Usage statistics
+│   ├── dashboard/           # Vite + Vue 3 + TypeScript dashboard source
+│   │   ├── src/
+│   │   │   ├── main.ts          # App entry, Axios interceptors (JWT + refresh)
+│   │   │   ├── router.ts        # Vue Router 4 (history mode, auth guard)
+│   │   │   ├── api.ts           # Typed Axios API functions + helpers
+│   │   │   ├── types.ts         # TypeScript interfaces
+│   │   │   ├── style.css        # Global styles
+│   │   │   ├── stores/
+│   │   │   │   ├── auth.ts      # Pinia: JWT tokens + email
+│   │   │   │   └── app.ts       # Pinia: projects, contacts, refresh key
+│   │   │   └── components/
+│   │   │       ├── App.vue
+│   │   │       ├── AppLayout.vue
+│   │   │       ├── AppHeader.vue
+│   │   │       ├── LoginScreen.vue
+│   │   │       ├── HomeDashboard.vue
+│   │   │       ├── ContactSidebar.vue
+│   │   │       ├── ContactDetail.vue
+│   │   │       ├── ProfileTab.vue
+│   │   │       ├── ConversationsTab.vue
+│   │   │       ├── ProjectPanel.vue
+│   │   │       └── ToastNotification.vue
+│   │   ├── package.json
+│   │   └── vite.config.ts
 │   ├── static/
-│   │   └── dashboard.html   # Self-contained Vue.js dashboard
+│   │   └── dist/            # Vite build output (committed, served by FastAPI)
 │   └── assets/
 │       ├── logo.png
 │       └── raven.png
