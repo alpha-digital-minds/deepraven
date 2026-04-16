@@ -137,7 +137,7 @@ Every contact gets a fully structured `UserProfile` that captures what matters f
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Scheduling / Locking | Redis (Upstash or self-hosted) |
 | LLM | Groq API — `llama-3.3-70b-versatile` (OpenAI-compatible) |
-| Dashboard | Embedded single-file Vue.js HTML |
+| Dashboard | Vite 5 + Vue 3 + TypeScript SFCs (Pinia, Vue Router, Chart.js, Axios) |
 
 ---
 
@@ -380,8 +380,32 @@ deepraven/
 │   │   ├── conversations.py # Conversation ingest
 │   │   ├── profiles.py      # Profile CRUD + extraction
 │   │   └── stats.py         # Usage statistics
+│   ├── dashboard/           # Vite + Vue 3 + TypeScript dashboard source
+│   │   ├── src/
+│   │   │   ├── main.ts          # App entry, Axios interceptors (JWT + refresh)
+│   │   │   ├── router.ts        # Vue Router 4 (history mode, auth guard)
+│   │   │   ├── api.ts           # Typed Axios API functions + helpers
+│   │   │   ├── types.ts         # TypeScript interfaces
+│   │   │   ├── style.css        # Global styles
+│   │   │   ├── stores/
+│   │   │   │   ├── auth.ts      # Pinia: JWT tokens + email
+│   │   │   │   └── app.ts       # Pinia: projects, contacts, refresh key
+│   │   │   └── components/
+│   │   │       ├── App.vue
+│   │   │       ├── AppLayout.vue
+│   │   │       ├── AppHeader.vue
+│   │   │       ├── LoginScreen.vue
+│   │   │       ├── HomeDashboard.vue
+│   │   │       ├── ContactSidebar.vue
+│   │   │       ├── ContactDetail.vue
+│   │   │       ├── ProfileTab.vue
+│   │   │       ├── ConversationsTab.vue
+│   │   │       ├── ProjectPanel.vue
+│   │   │       └── ToastNotification.vue
+│   │   ├── package.json
+│   │   └── vite.config.ts
 │   ├── static/
-│   │   └── dashboard.html   # Self-contained Vue.js dashboard
+│   │   └── dist/            # Vite build output (committed, served by FastAPI)
 │   └── assets/
 │       ├── logo.png
 │       └── raven.png
