@@ -293,6 +293,75 @@ Never shorten the actual address fields.
 - Never abbreviate the country name (use "Saudi Arabia" not "SA")"""
 
 
+_META_PROMPT = """You are an expert at writing LLM system prompts for AI agent memory and CRM systems.
+
+Given a JSON schema and use-case context, write three system prompts:
+
+1. prompt_extractor — a system prompt that instructs an LLM to extract structured profile data from sales/support conversations and return it as JSON matching the given schema. Include a detailed field guide explaining what to extract for each field. End with: "Return ONLY valid JSON matching the schema above. No markdown, no commentary."
+
+2. prompt_reviewer — a system prompt that instructs an LLM to review a draft JSON profile against the source conversations, identify errors or missing data, and return a corrected profile. The response must be a JSON object with two keys: "critique" (string) and "profile" (the corrected profile JSON matching the schema).
+
+3. prompt_compressor — a system prompt that instructs an LLM to compress a verbose profile JSON into a lean, token-efficient version that retains every actionable fact. Return ONLY valid JSON matching the schema — no markdown, no commentary.
+
+Return ONLY valid JSON with exactly three keys: "prompt_extractor", "prompt_reviewer", "prompt_compressor". No markdown, no commentary."""
+
+
+async def generate_prompts(
+    profile_schema: dict,
+    purpose_industry: str,
+    purpose_agent_type: str,
+    purpose_description: str,
+    *,
+    comment: str | None = None,
+    account_id: str | None = None,
+) -> dict:
+    """Call LLM to generate extractor, reviewer, and compressor prompts.
+
+    Returns dict with keys: prompt_extractor, prompt_reviewer, prompt_compressor.
+    """
+    settings = get_settings()
+    client = AsyncOpenAI(
+        api_key=settings.groq_api_key,
+        base_url=settings.groq_base_url,
+    )
+
+    user_msg = (
+        f"SCHEMA:\n{json.dumps(profile_schema, indent=2)}\n\n"
+        f"PURPOSE:\n"
+        f"Industry: {purpose_industry}\n"
+        f"Agent type: {purpose_agent_type}\n"
+        f"Description: {purpose_description}"
+    )
+    if comment:
+        user_msg += f"\n\nINSTRUCTIONS FOR THIS GENERATION: {comment}"
+
+    raw, usage = await _call_llm(client, settings.groq_model, _META_PROMPT, user_msg)
+
+    if account_id and usage:
+        from app import supabase_client as db
+        await db.log_llm_usage(
+            account_id=account_id,
+            project_id=None,
+            contact_id=None,
+            prompt_tokens=usage.prompt_tokens,
+            completion_tokens=usage.completion_tokens,
+            total_tokens=usage.total_tokens,
+            model=settings.groq_model,
+        )
+
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"LLM returned invalid JSON for prompt generation: {exc}") from exc
+
+    required = {"prompt_extractor", "prompt_reviewer", "prompt_compressor"}
+    missing = required - result.keys()
+    if missing:
+        raise ValueError(f"LLM response missing keys: {missing}")
+
+    return {k: result[k] for k in required}
+
+
 def _build_conversation_text(conversations: list[ConversationRecord]) -> str:
     parts: list[str] = []
     for rec in conversations:
