@@ -1,1 +1,0 @@
-import{a7 as u,r as e}from"./index-DHiwdUZy.js";const p=u("app",()=>{const o=e([]),s=e([]),n=e(0);function c(t){o.value=t}function r(t){s.value=t}function a(){n.value++}return{projects:o,contacts:s,contactsRefreshKey:n,setProjects:c,setContacts:r,refreshContacts:a}});export{p as u};

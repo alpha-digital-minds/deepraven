@@ -58,13 +58,16 @@
     </div>
 
     <!-- Generated Prompts Section -->
-    <div v-if="config" class="config-card prompts-card">
+    <div class="config-card prompts-card">
       <div class="prompts-header">
         <div>
           <h3>Generated Prompts</h3>
-          <p class="card-hint">Auto-generated from your schema and purpose. You can edit them directly.</p>
+          <p class="card-hint">
+            <span v-if="config">Auto-generated from your schema and purpose. You can edit them directly.</span>
+            <span v-else>Save your schema and purpose above to generate prompts.</span>
+          </p>
         </div>
-        <div class="regen-row">
+        <div v-if="config" class="regen-row">
           <input
             v-model="regenComment"
             type="text"
@@ -88,7 +91,10 @@
         >{{ tab.label }}</button>
       </div>
 
-      <div class="prompt-editor-wrap">
+      <div v-if="!config" class="prompts-empty">
+        No prompts generated yet. Fill in your purpose and schema above, then click "Save &amp; Generate Prompts".
+      </div>
+      <div v-else class="prompt-editor-wrap">
         <textarea
           v-model="promptDrafts[activeTab]"
           class="prompt-editor"
@@ -500,6 +506,16 @@ async function doDelete() {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.prompts-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted, #888);
+  font-size: 13px;
+  background: var(--bg, #111);
+  border: 1px dashed var(--border, #333);
+  border-radius: 6px;
 }
 
 .danger-card {
