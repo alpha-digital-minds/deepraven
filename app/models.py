@@ -217,3 +217,36 @@ class OtpVerifyRequest(BaseModel):
 
 class ResendOtpRequest(BaseModel):
     email: str
+
+
+# ── Account config models ─────────────────────────────────────────────────────
+
+class AccountConfigCreate(BaseModel):
+    profile_schema: dict
+    purpose_industry: str
+    purpose_agent_type: str
+    purpose_description: str
+
+
+class AccountConfig(BaseModel):
+    id: str
+    account_id: str
+    profile_schema: dict
+    purpose_industry: str
+    purpose_agent_type: str
+    purpose_description: str
+    prompt_extractor: str
+    prompt_reviewer: str
+    prompt_compressor: str
+    created_at: str
+    updated_at: str
+
+
+class PromptsUpdate(BaseModel):
+    prompt_extractor: Optional[str] = None
+    prompt_reviewer: Optional[str] = None
+    prompt_compressor: Optional[str] = None
+
+
+class RegenerateRequest(BaseModel):
+    comment: Optional[str] = None
