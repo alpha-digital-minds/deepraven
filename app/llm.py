@@ -299,7 +299,7 @@ Given a JSON schema and use-case context, write three system prompts:
 
 1. prompt_extractor — a system prompt that instructs an LLM to extract structured profile data from sales/support conversations and return it as JSON matching the given schema. Include a detailed field guide explaining what to extract for each field. End with: "Return ONLY valid JSON matching the schema above. No markdown, no commentary."
 
-2. prompt_reviewer — a system prompt that instructs an LLM to review a draft JSON profile against the source conversations, identify errors or missing data, and return a corrected profile. The response must be a JSON object with two keys: "critique" (string) and "profile" (the corrected profile JSON matching the schema).
+2. prompt_reviewer — a system prompt that instructs an LLM to review a draft JSON profile against the source conversations, identify errors or missing data, and return a corrected profile. Embed the schema inline so the reviewer knows the expected structure. The response must be a JSON object with two keys: "critique" (string) and "profile" (the corrected profile JSON matching the schema).
 
 3. prompt_compressor — a system prompt that instructs an LLM to compress a verbose profile JSON into a lean, token-efficient version that retains every actionable fact. Return ONLY valid JSON matching the schema — no markdown, no commentary.
 
