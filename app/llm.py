@@ -359,7 +359,16 @@ async def generate_prompts(
     if missing:
         raise ValueError(f"LLM response missing keys: {missing}")
 
-    return {k: result[k] for k in required}
+    schema_block = f"SCHEMA:\n{json.dumps(profile_schema, indent=2)}\n\n"
+    reviewer = result["prompt_reviewer"]
+    if "SCHEMA:" not in reviewer:
+        reviewer = schema_block + reviewer
+
+    return {
+        "prompt_extractor": result["prompt_extractor"],
+        "prompt_reviewer": reviewer,
+        "prompt_compressor": result["prompt_compressor"],
+    }
 
 
 def _build_conversation_text(conversations: list[ConversationRecord]) -> str:
