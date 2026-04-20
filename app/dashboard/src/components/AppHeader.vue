@@ -25,6 +25,8 @@
       </div>
     </div>
 
+    <RouterLink to="/configuration" class="btn-sm config-link">⚙ Configuration</RouterLink>
+
     <div class="account-info" id="account-info">
       <span>{{ authStore.email }}</span>
       <button class="btn-sm" @click="doLogout">Sign out</button>
