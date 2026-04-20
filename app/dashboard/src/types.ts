@@ -117,3 +117,26 @@ export interface AuthResponse {
   access_token: string
   refresh_token: string | null
 }
+
+export interface AccountConfigCreate {
+  profile_schema: Record<string, unknown>
+  purpose_industry: string
+  purpose_agent_type: string
+  purpose_description: string
+}
+
+export interface AccountConfig extends AccountConfigCreate {
+  id: string
+  account_id: string
+  prompt_extractor: string
+  prompt_reviewer: string
+  prompt_compressor: string
+  created_at: string
+  updated_at: string
+}
+
+export interface PromptsUpdate {
+  prompt_extractor?: string
+  prompt_reviewer?: string
+  prompt_compressor?: string
+}

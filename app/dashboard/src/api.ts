@@ -3,6 +3,7 @@ import type {
   AuthResponse, Project, Contact, ApiKey, ApiKeyCreated,
   UserProfile, ConversationRecord, StatsOverview,
   DailyConversation, ProjectUsage,
+  AccountConfig, AccountConfigCreate, PromptsUpdate,
 } from './types'
 
 export const api = axios.create({ baseURL: '/api/v1' })
@@ -84,6 +85,20 @@ export const getConversations = (pid: string, cid: string) =>
 
 export const deleteConversations = (pid: string, cid: string) =>
   api.delete(`/projects/${pid}/contacts/${cid}/conversations`)
+
+// ── Config ────────────────────────────────────────────────────────────────────
+export const getConfig = () => api.get<AccountConfig>('/config')
+
+export const saveConfig = (data: AccountConfigCreate) =>
+  api.put<AccountConfig>('/config', data)
+
+export const updatePrompts = (data: PromptsUpdate) =>
+  api.patch<AccountConfig>('/config/prompts', data)
+
+export const regeneratePrompts = (comment?: string) =>
+  api.post<AccountConfig>('/config/regenerate', { comment: comment ?? null })
+
+export const deleteConfig = () => api.delete('/config')
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 export const getStatsOverview = () => api.get<StatsOverview>('/stats/overview')
