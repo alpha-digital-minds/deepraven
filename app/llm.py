@@ -422,6 +422,23 @@ def _safe_merge(updated_data: dict, profile: UserProfile) -> UserProfile:
     return UserProfile.model_validate(merged)
 
 
+def _safe_merge_dict(updated: dict, current: dict) -> dict:
+    """Merge LLM output into current profile dict, preserving non-empty existing values."""
+    result = dict(current)
+    for key, new_val in updated.items():
+        old_val = current.get(key)
+        if isinstance(new_val, dict) and isinstance(old_val, dict):
+            result[key] = _safe_merge_dict(new_val, old_val)
+        elif isinstance(new_val, list):
+            result[key] = new_val if new_val else (old_val if isinstance(old_val, list) else [])
+        elif isinstance(new_val, str):
+            result[key] = new_val if new_val else (old_val if isinstance(old_val, str) else "")
+        elif new_val is not None:
+            result[key] = new_val
+        # None → keep old_val unchanged
+    return result
+
+
 async def extract_and_update_profile(
     profile: UserProfile,
     conversations: list[ConversationRecord],
@@ -479,6 +496,64 @@ async def extract_and_update_profile(
     return _safe_merge(final_data, profile)
 
 
+async def extract_and_update_profile_custom(
+    profile_data: dict,
+    conversations: list[ConversationRecord],
+    account_config: dict,
+    *,
+    account_id: str | None = None,
+    project_id: str | None = None,
+    contact_id: str | None = None,
+) -> dict:
+    """Extract + review using account's custom prompts. Returns a plain dict."""
+    settings = get_settings()
+    client = AsyncOpenAI(
+        api_key=settings.groq_api_key,
+        base_url=settings.groq_base_url,
+    )
+
+    extractor_prompt = account_config["prompt_extractor"]
+    reviewer_prompt = account_config["prompt_reviewer"]
+    conv_text = _build_conversation_text(conversations)
+    user_msg = (
+        f"CURRENT PROFILE:\n{json.dumps(profile_data, indent=2)}\n\n"
+        f"RECENT CONVERSATIONS:\n{conv_text}"
+    )
+
+    usages = []
+
+    tier1_json, u1 = await _call_llm(client, settings.groq_model, extractor_prompt, user_msg)
+    usages.append(u1)
+
+    try:
+        review_json, u2 = await _call_llm(
+            client, settings.groq_model, reviewer_prompt,
+            f"CONVERSATIONS:\n{conv_text}\n\nDRAFT PROFILE:\n{tier1_json}",
+        )
+        usages.append(u2)
+        review_data = json.loads(review_json)
+        final_data = review_data.get("profile") or json.loads(tier1_json)
+    except Exception:
+        logger.exception("Custom Tier 2 review failed — using tier 1 output")
+        final_data = json.loads(tier1_json)
+
+    if account_id and project_id:
+        from app import supabase_client as db
+        total_prompt = sum(u.prompt_tokens for u in usages if u)
+        total_completion = sum(u.completion_tokens for u in usages if u)
+        await db.log_llm_usage(
+            account_id=account_id,
+            project_id=project_id,
+            contact_id=contact_id,
+            prompt_tokens=total_prompt,
+            completion_tokens=total_completion,
+            total_tokens=total_prompt + total_completion,
+            model=settings.groq_model,
+        )
+
+    return _safe_merge_dict(final_data, profile_data)
+
+
 async def compress_profile(
     profile: UserProfile,
     *,
@@ -521,3 +596,46 @@ async def compress_profile(
         return profile
 
     return _safe_merge(compressed_data, profile)
+
+
+async def compress_profile_custom(
+    profile_data: dict,
+    account_config: dict,
+    *,
+    account_id: str | None = None,
+    project_id: str | None = None,
+    contact_id: str | None = None,
+) -> dict:
+    """Compress a custom-schema profile using the account's compressor prompt."""
+    settings = get_settings()
+    client = AsyncOpenAI(
+        api_key=settings.groq_api_key,
+        base_url=settings.groq_base_url,
+    )
+
+    compressor_prompt = account_config["prompt_compressor"]
+    profile_json = json.dumps(profile_data, indent=2, ensure_ascii=False)
+
+    compressed_json, usage = await _call_llm(
+        client, settings.groq_model, compressor_prompt, profile_json,
+    )
+
+    if account_id and project_id and usage:
+        from app import supabase_client as db
+        await db.log_llm_usage(
+            account_id=account_id,
+            project_id=project_id,
+            contact_id=contact_id,
+            prompt_tokens=usage.prompt_tokens,
+            completion_tokens=usage.completion_tokens,
+            total_tokens=usage.total_tokens,
+            model=settings.groq_model,
+        )
+
+    try:
+        compressed_data = json.loads(compressed_json)
+    except json.JSONDecodeError:
+        logger.exception("Custom compression returned invalid JSON — keeping original")
+        return profile_data
+
+    return _safe_merge_dict(compressed_data, profile_data)
