@@ -20,7 +20,7 @@ Allow accounts to define their own JSON data model (schema) and use-case context
 CREATE TABLE account_config (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   account_id           uuid NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-  schema               jsonb NOT NULL,
+  profile_schema       jsonb NOT NULL,
   purpose_industry     text NOT NULL,
   purpose_agent_type   text NOT NULL,
   purpose_description  text NOT NULL,
@@ -38,7 +38,7 @@ CREATE POLICY account_config_owner ON account_config
 ```
 
 - One row per account (enforced via UNIQUE constraint).
-- `schema` is the customer-defined JSON data model.
+- `profile_schema` is the customer-defined JSON data model (named `profile_schema` to avoid shadowing Pydantic v2's `model_json_schema()` method).
 - `purpose_*` fields form the structured use-case context.
 - `prompt_*` fields hold the generated (or manually edited) prompts.
 - No changes to existing tables.
@@ -61,7 +61,7 @@ All endpoints are JWT-only, scoped to the authenticated account. New router: `ap
 
 ```python
 class AccountConfigCreate(BaseModel):
-    schema: dict
+    profile_schema: dict
     purpose_industry: str
     purpose_agent_type: str
     purpose_description: str
@@ -69,7 +69,7 @@ class AccountConfigCreate(BaseModel):
 class AccountConfig(BaseModel):
     id: str
     account_id: str
-    schema: dict
+    profile_schema: dict
     purpose_industry: str
     purpose_agent_type: str
     purpose_description: str
@@ -151,7 +151,7 @@ A new **"Configuration"** tab added to `app/static/dashboard.html` (existing Vue
 
 ### Layout
 
-1. **Purpose section** — industry dropdown, agent type dropdown, description textarea
+1. **Purpose section** — industry text input, agent type text input, description textarea (all free-text; no fixed enum values)
 2. **Schema section** — JSON textarea with client-side JSON validation indicator
 3. **"Save & Generate Prompts"** button — calls `PUT /api/v1/config`, shows loading state during generation
 4. **Generated Prompts section** (appears after first save):
