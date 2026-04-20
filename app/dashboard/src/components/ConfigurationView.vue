@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { getConfig, saveConfig, updatePrompts, regeneratePrompts, deleteConfig } from '../api'
 import { useToast } from '../composables/useToast'
 import type { AccountConfig } from '../types'
