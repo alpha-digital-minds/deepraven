@@ -21,7 +21,12 @@ from datetime import datetime, timezone
 
 from app import redis_client as locks
 from app import supabase_client as db
-from app.llm import compress_profile, extract_and_update_profile
+from app.llm import (
+    compress_profile,
+    compress_profile_custom,
+    extract_and_update_profile,
+    extract_and_update_profile_custom,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,16 +50,28 @@ async def run_profile_update(project_id: str, contact_id: str) -> None:
         project = await db.get_project(project_id)
         account_id = project.account_id if project else None
 
-        profile = await db.get_or_create_profile(contact_id, project_id)
-        updated = await extract_and_update_profile(
-            profile, conversations,
-            account_id=account_id,
-            project_id=project_id,
-            contact_id=contact_id,
-        )
-        await db.save_profile(contact_id, project_id, updated)
-        await db.mark_conversations_processed(ids)
+        account_config = await db.get_account_config(account_id) if account_id else None
 
+        if account_config and account_config.get("prompt_extractor"):
+            profile_data = await db.get_profile_raw(contact_id)
+            updated_data = await extract_and_update_profile_custom(
+                profile_data, conversations, account_config,
+                account_id=account_id,
+                project_id=project_id,
+                contact_id=contact_id,
+            )
+            await db.save_profile_raw(contact_id, project_id, updated_data)
+        else:
+            profile = await db.get_or_create_profile(contact_id, project_id)
+            updated = await extract_and_update_profile(
+                profile, conversations,
+                account_id=account_id,
+                project_id=project_id,
+                contact_id=contact_id,
+            )
+            await db.save_profile(contact_id, project_id, updated)
+
+        await db.mark_conversations_processed(ids)
         logger.info(
             "Profile updated: project=%s contact=%s (%d conversations)",
             project_id, contact_id, len(conversations),
@@ -92,18 +109,32 @@ async def compression_worker(run_hour_utc: int = 23) -> None:
                     logger.debug("Skipping compression for contact=%s — extraction in progress", contact_id)
                     continue
                 try:
-                    profile = await db.get_profile(contact_id)
-                    if not profile:
-                        continue
                     project = await db.get_project(project_id)
                     account_id = project.account_id if project else None
-                    compressed = await compress_profile(
-                        profile,
-                        account_id=account_id,
-                        project_id=project_id,
-                        contact_id=contact_id,
-                    )
-                    await db.save_profile(contact_id, project_id, compressed)
+                    account_config = await db.get_account_config(account_id) if account_id else None
+
+                    if account_config and account_config.get("prompt_compressor"):
+                        profile_data = await db.get_profile_raw(contact_id)
+                        if not profile_data:
+                            continue
+                        compressed_data = await compress_profile_custom(
+                            profile_data, account_config,
+                            account_id=account_id,
+                            project_id=project_id,
+                            contact_id=contact_id,
+                        )
+                        await db.save_profile_raw(contact_id, project_id, compressed_data)
+                    else:
+                        profile = await db.get_profile(contact_id)
+                        if not profile:
+                            continue
+                        compressed = await compress_profile(
+                            profile,
+                            account_id=account_id,
+                            project_id=project_id,
+                            contact_id=contact_id,
+                        )
+                        await db.save_profile(contact_id, project_id, compressed)
                     logger.debug("Compressed profile for contact=%s", contact_id)
                 except Exception:
                     logger.exception("Compression failed for contact=%s", contact_id)
