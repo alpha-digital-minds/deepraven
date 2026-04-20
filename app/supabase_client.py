@@ -510,7 +510,7 @@ async def mark_conversations_processed(ids: list[str]) -> None:
 
 async def log_llm_usage(
     account_id: str,
-    project_id: str,
+    project_id: Optional[str],
     contact_id: str | None,
     prompt_tokens: int,
     completion_tokens: int,
@@ -608,3 +608,71 @@ async def count_conversations(contact_id: str) -> int:
         .execute()
     )
     return res.count or 0
+
+
+# ── Account config ────────────────────────────────────────────────────────────
+
+async def get_account_config(account_id: str) -> Optional[dict]:
+    sb = await get_supabase()
+    res = (
+        await sb.table("account_config")
+        .select("*")
+        .eq("account_id", account_id)
+        .execute()
+    )
+    return res.data[0] if res.data else None
+
+
+async def upsert_account_config(account_id: str, data: dict) -> dict:
+    sb = await get_supabase()
+    payload = {"account_id": account_id, **data}
+    res = (
+        await sb.table("account_config")
+        .upsert(payload, on_conflict="account_id")
+        .execute()
+    )
+    return res.data[0]
+
+
+async def update_account_prompts(account_id: str, prompts: dict) -> dict:
+    sb = await get_supabase()
+    res = (
+        await sb.table("account_config")
+        .update(prompts)
+        .eq("account_id", account_id)
+        .execute()
+    )
+    return res.data[0]
+
+
+async def delete_account_config(account_id: str) -> bool:
+    sb = await get_supabase()
+    res = (
+        await sb.table("account_config")
+        .delete()
+        .eq("account_id", account_id)
+        .execute()
+    )
+    return len(res.data) > 0
+
+
+async def get_profile_raw(contact_id: str) -> dict:
+    """Return the raw profile JSONB dict, or {} if none exists."""
+    sb = await get_supabase()
+    res = (
+        await sb.table("profiles")
+        .select("data")
+        .eq("contact_id", contact_id)
+        .execute()
+    )
+    return res.data[0]["data"] if res.data else {}
+
+
+async def save_profile_raw(contact_id: str, project_id: str, data: dict) -> None:
+    """Upsert a raw dict profile (used for custom-schema accounts)."""
+    sb = await get_supabase()
+    await sb.table("profiles").upsert({
+        "contact_id": contact_id,
+        "project_id": project_id,
+        "data": data,
+    }, on_conflict="contact_id").execute()
