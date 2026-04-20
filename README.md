@@ -228,10 +228,11 @@ EXTRACTION_DELAY_SECONDS=60
 Run the migrations in order in the **Supabase SQL Editor** (`supabase.com → your project → SQL Editor`):
 
 ```
-db_migrations/migrations/001_initial.sql       # Core schema + RLS
-db_migrations/migrations/002_llm_usage.sql     # LLM usage logging
+db_migrations/migrations/001_initial.sql           # Core schema + RLS
+db_migrations/migrations/002_llm_usage.sql         # LLM usage logging
 db_migrations/migrations/003_account_api_keys.sql  # Account-level API keys
-db_migrations/migrations/003_butler_rls.sql    # Extended RLS policies
+db_migrations/migrations/003_butler_rls.sql        # Extended RLS policies
+db_migrations/migrations/004_account_config.sql    # Custom schema + prompts
 ```
 
 > Paste each file's contents into the SQL Editor and click **Run**. Order matters.
@@ -356,6 +357,7 @@ Open `http://localhost:5100/dashboard` for the built-in management UI.
 - **Extract New** — runs LLM on unprocessed conversations only
 - **Force Re-extract** — reprocesses everything and rewrites the full profile
 - **Auto-refresh** — sidebar refreshes every 15 seconds
+- **⚙ Configuration tab** — define a custom JSON schema and use-case purpose; DeepRaven generates tailored extraction prompts via a meta-LLM call. Prompts are viewable, editable, and regeneratable with an optional guiding comment.
 
 ---
 
@@ -406,6 +408,7 @@ deepraven/
 │   ├── routers/
 │   │   ├── auth.py          # Register, login, refresh, OTP
 │   │   ├── account_keys.py  # Account-level API key management
+│   │   ├── config.py        # Custom schema + prompt generation (JWT only)
 │   │   ├── projects.py      # Project CRUD + project API keys
 │   │   ├── contacts.py      # Contact listing
 │   │   ├── conversations.py # Conversation ingest
@@ -432,6 +435,7 @@ deepraven/
 │   │   │       ├── ProfileTab.vue
 │   │   │       ├── ConversationsTab.vue
 │   │   │       ├── ProjectPanel.vue
+│   │   │       ├── ConfigurationView.vue
 │   │   │       └── ToastNotification.vue
 │   │   ├── package.json
 │   │   └── vite.config.ts
@@ -445,7 +449,8 @@ deepraven/
 │       ├── 001_initial.sql
 │       ├── 002_llm_usage.sql
 │       ├── 003_account_api_keys.sql
-│       └── 003_butler_rls.sql
+│       ├── 003_butler_rls.sql
+│       └── 004_account_config.sql
 ├── docker-compose.yml
 ├── Dockerfile
 ├── requirements.txt
@@ -503,6 +508,7 @@ DeepRaven is open source and we'd love your help. See [CONTRIBUTING.md](CONTRIBU
 - [x] API key auth (project-level + account-level)
 - [x] Built-in dashboard
 - [x] Docker support
+- [x] Custom schema + LLM-generated extraction prompts per account
 - [ ] OpenAI / Anthropic backend support
 - [ ] Webhook push on profile update
 - [ ] Python + TypeScript SDK
