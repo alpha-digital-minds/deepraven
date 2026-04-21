@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.redis_client import close_redis, get_redis
 from app.supabase_client import close_supabase, get_supabase
 from app.worker import compression_worker, extraction_worker
-from app.routers import account_keys, auth, contacts, conversations, profiles, projects, stats
+from app.routers import account_keys, auth, config, contacts, conversations, profiles, projects, stats
 
 logging.basicConfig(level=logging.INFO)
 
@@ -45,6 +45,7 @@ app.include_router(contacts.router, prefix="/api/v1")
 app.include_router(conversations.router, prefix="/api/v1")
 app.include_router(profiles.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
+app.include_router(config.router, prefix="/api/v1")
 
 
 @app.get("/", include_in_schema=False)

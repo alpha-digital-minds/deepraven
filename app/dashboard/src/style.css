@@ -96,6 +96,7 @@ header .account-info { font-size: 12px; color: var(--muted); display: flex; alig
 /* ── App layout ── */
 #app-layout { display: none; flex: 1; overflow: hidden; }
 #app-layout.visible { display: flex; }
+#app-layout.no-sidebar #main { flex: 1; overflow-y: auto; }
 
 /* ── Project picker (header dropdown) ── */
 .proj-picker { position: relative; }

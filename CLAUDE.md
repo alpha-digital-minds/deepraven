@@ -84,28 +84,31 @@ Two modes, both accepted by `require_project_access` in `app/auth.py`:
 |---|---|
 | `app/main.py` | App factory, lifespan (starts Redis/Supabase + background workers), route registration, serves dashboard |
 | `app/config.py` | `Settings` — loads all env vars via Pydantic Settings |
-| `app/models.py` | All Pydantic v2 models: `UserProfile`, `Contact`, `Project`, `ConversationRecord`, etc. |
+| `app/models.py` | All Pydantic v2 models: `UserProfile`, `Contact`, `Project`, `ConversationRecord`, `AccountConfig`, `AccountConfigCreate`, `PromptsUpdate`, `RegenerateRequest`, etc. |
 | `app/auth.py` | `require_api_key`, `require_jwt`, `require_project_access` dependencies |
-| `app/supabase_client.py` | All persistent DB ops: projects, contacts, profiles, conversations, API keys, usage logs |
+| `app/supabase_client.py` | All persistent DB ops: projects, contacts, profiles, conversations, API keys, usage logs, account config |
 | `app/redis_client.py` | `acquire_lock`, `release_lock`, `is_locked`, `schedule_extraction`, `get_due_extractions` |
-| `app/llm.py` | 3-tier pipeline: `extract_and_update_profile()` (extract + review), `compress_profile()` (daily compression). All system prompts live here. |
-| `app/worker.py` | `extraction_worker` (polls Redis schedule every 20s), `compression_worker` (daily 23:00 UTC) |
+| `app/llm.py` | 3-tier pipeline: `extract_and_update_profile()` (extract + review), `compress_profile()` (daily compression), `generate_prompts()` (meta-LLM call), `extract_and_update_profile_custom()`, `compress_profile_custom()`. All system prompts live here. |
+| `app/worker.py` | `extraction_worker` (polls Redis schedule every 20s), `compression_worker` (daily 23:00 UTC). Both load account config and use custom-schema pipeline when present. |
 | `app/routers/auth.py` | Register, login, refresh, OTP verify, reset/update password (proxy to Supabase Auth) |
 | `app/routers/account_keys.py` | Account-level API key management (`dra_` prefix) |
+| `app/routers/config.py` | Account config CRUD + prompt regeneration (JWT only) |
 | `app/routers/projects.py` | Project CRUD + project-level API key management (JWT only) |
 | `app/routers/contacts.py` | List/get contacts (JWT only) |
 | `app/routers/conversations.py` | Ingest + list conversations (API key or JWT) |
 | `app/routers/profiles.py` | Profile CRUD, extraction, status (API key or JWT) |
 | `app/routers/stats.py` | Usage statistics endpoint |
-| `app/static/dashboard.html` | Single-file Vue.js dashboard |
+| `app/dashboard/src/` | Vite + Vue 3 + TypeScript dashboard source |
+| `app/static/dist/` | Compiled dashboard assets (served by FastAPI) |
 | `db_migrations/migrations/001_initial.sql` | Core schema: accounts, projects, contacts, profiles, conversations, api_keys, RLS |
 | `db_migrations/migrations/002_llm_usage.sql` | `llm_usage_logs` table |
 | `db_migrations/migrations/003_account_api_keys.sql` | Account-level API keys table |
 | `db_migrations/migrations/003_butler_rls.sql` | Extended RLS policies |
+| `db_migrations/migrations/004_account_config.sql` | `account_config` table + RLS + `updated_at` trigger |
 
 ## Supabase schema
 
-Tables: `accounts` (auto-created on Auth signup via trigger), `projects`, `api_keys` (key_hash only), `contacts` (identified by `external_id`), `profiles` (JSONB `UserProfile`), `conversations` (messages + `processed` flag), `llm_usage_logs`.
+Tables: `accounts` (auto-created on Auth signup via trigger), `projects`, `api_keys` (key_hash only), `contacts` (identified by `external_id`), `profiles` (JSONB `UserProfile`), `conversations` (messages + `processed` flag), `llm_usage_logs`, `account_config` (one row per account — custom schema, purpose, generated prompts).
 
 All tables have RLS — each account sees only its own rows.
 
@@ -146,6 +149,13 @@ GET    /api/v1/projects/{pid}/contacts/{cid}/profile/status
 POST   /api/v1/projects/{pid}/contacts/{cid}/profile/extract
 POST   /api/v1/projects/{pid}/contacts/{cid}/profile/extract/sync
 DELETE /api/v1/projects/{pid}/contacts/{cid}/contact
+
+Config (JWT):
+GET    /api/v1/config
+PUT    /api/v1/config
+PATCH  /api/v1/config/prompts
+POST   /api/v1/config/regenerate
+DELETE /api/v1/config
 
 Stats (JWT):
 GET    /api/v1/stats
